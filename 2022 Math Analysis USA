@@ -12,12 +12,16 @@ data <- select(data, -c(CNTSTUID,CNTRYID))
 
 data_clean <- data[rowSums(is.na(data[, -(1:2)])) != ncol(data[, -(1:2)]), ]  #remove rows with all NAs (excluding values in the first 2 columns)
 
+result <- fuller_rows %>%    #remove all respondents with fewer than 5 answer
+    mutate(non_na_count = rowSums(!is.na(across(-c(1:2))))) %>%
+    filter(non_na_count < 5)
+
 f <- subset(data_clean, ST004D01T == 1)
 m <- subset(data_clean, ST004D01T == 2)
 
 #Identify parameters for multipleGroup model
 
-weights <- data_clean$W_FSTUWT/(sum(data_clean$W_FSTUWT)/nrow(data_clean))
+weights <- data_clean$W_FSTUWT/(sum(data_clean$W_FSTUWT)/nrow(data_clean))  #normalize the weights
 group <- c(rep('f', nrow(f)), rep('m', nrow(m)))
 anchors <- colnames(data_clean)[c(1,2,3,4,5)]  #replace numbers with selected anchors
 
