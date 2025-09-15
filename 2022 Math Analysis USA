@@ -4,7 +4,7 @@ library(mirt)
 
 #load in information, select US entries and split between male and female
 
-math_items <- read_sas("cy07_msu_stu_cog.sas7bdat", col_select = c("CNTSTUID", "CNTRYID", [math items] ))
+math_items <- read_sas("cy08msp_stu_cog.sas7bdat", col_select = c("CNTSTUID", "CNTRYID", [math items] ))
 student_info <- read_sas("cy07_msu_stu_qqq.sas7bdat", col_select = c("CNTSTUID","ST004D01T", "W_FSTUWT")) #includes student ID, gender, and weights
 data <- merge(math_items,items, by="CNTSTUID")
 data <- subset(data, CNTRYID == 840)
