@@ -19,14 +19,14 @@ result <- fuller_rows %>%    #remove all respondents with fewer than 5 answer
 f <- subset(data_clean, ST004D01T == 1)
 m <- subset(data_clean, ST004D01T == 2)
 
+items <- rbind(f,m)
+items <- select(items, -c(ST004D01T,W_FSTUWT))
+
 #Identify parameters for multipleGroup model
 
 weights <- data_clean$W_FSTUWT/(sum(data_clean$W_FSTUWT)/nrow(data_clean))  #normalize the weights
 group <- c(rep('f', nrow(f)), rep('m', nrow(m)))
-anchors <- colnames(data_clean)[c(1,2,3,4,5)]  #replace numbers with selected anchors
-
-items <- rbind(f,m)
-items <- select(items, -c(ST004D01T,W_FSTUWT))
+anchors <- colnames(items)[c(1,2,3,4,5)]  #replace numbers with selected anchors
 
 #Create model
 model <- multipleGroup(items, 1, group = group, SE = TRUE, survey.weights = weights, invariance = c(anchors, 'free_means', 'free_var'))
