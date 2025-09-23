@@ -43,4 +43,4 @@ model2 <- multipleGroup(items, 1, group = group, SE = TRUE, survey.weights = wei
 
 Wald2 <- DIF(model2, c('a1', 'd'), Wald = TRUE)
 
-#Repeat process from lines 36-44 a total of four times to identify the initial anchors
+#Repeat process from lines 28-36 a total of four times to identify the initial anchors for the LRT
