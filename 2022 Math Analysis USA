@@ -12,7 +12,7 @@ data <- select(data, -c(CNTSTUID,CNTRYID))
 
 data_clean <- data[rowSums(is.na(data[, -(1:2)])) != ncol(data[, -(1:2)]), ]  #remove rows with all NAs (excluding values in the first 2 columns)
 
-result <- fuller_rows %>%    #remove all respondents with fewer than 5 answer
+# result <- fuller_rows %>%
     mutate(non_na_count = rowSums(!is.na(across(-c(1:2))))) %>%
     filter(non_na_count < 5)
 
