@@ -21,12 +21,28 @@ m <- subset(data_clean, ST004D01T == 2)
 
 items <- rbind(f,m)
 items <- select(items, -c(ST004D01T,W_FSTUWT))
+colnames(items) <- c(1:57)
 
-#Identify parameters for multipleGroup model
-
-weights <- data_clean$W_FSTUWT/(sum(data_clean$W_FSTUWT)/nrow(data_clean))  #normalize the weights
+#Identify parameters for unweighted multipleGroup model
 group <- c(rep('f', nrow(f)), rep('m', nrow(m)))
-anchors <- colnames(items)[c(1,2,3,4,5)]  #replace numbers with selected anchors
+anchors <- colnames(items)[c(1,2,3,4,5)]  #replace numbers with anchors identified in "Initial Anchor Identification"
 
 #Create model
-model <- multipleGroup(items, 1, group = group, SE = TRUE, survey.weights = weights, invariance = c(anchors, 'free_means', 'free_var'))
+model <- multipleGroup(items, 1, group = group, SE = TRUE, invariance = c(anchors, 'free_means', 'free_var'))
+
+#Perform LRT
+LRT <- DIF(model, c('a1','d'))
+
+#Depending on computational speed, another possibility is to screen this model with the Wald test and only test items with W > 5.991
+#Wald <- DIF(model, c('a1','d'), Wald=TRUE)
+#LRT <- DIF(model, c('a1','d'), items2test = c([items flagged by Wald]))
+
+anchors2 <- c([items from LRT with highest p-value])
+model2 <- multipleGroup(items, 1, group = group, SE = TRUE, invariance = c(anchors2, 'free_means', 'free_var'))
+LRT2 <- DIF(model2, c('a1','d'))
+
+anchors3 <- c([items from LRT2 with highest p-value])
+model3 <- multipleGroup(items, 1, group = group, SE = TRUE, invariance = c(anchors3, 'free_means', 'free_var'))
+LRT3 <- DIF(model3, c('a1','d'))
+
+p <- LRT3[LRT3$p < (0.05/57),]    #identify items over threshold for DIF
