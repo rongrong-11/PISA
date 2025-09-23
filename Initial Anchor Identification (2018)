@@ -1,1 +1,46 @@
-f
+library(haven)
+library(dplyr)
+library(mirt)
+
+#load in information, select US entries and split between male and female
+
+math_items <- read_sas("cy07_msu_stu_cog.sas7bdat", col_select = c("CNTSTUID", "CNTRYID", [math items] ))
+student_info <- read_sas("cy07_msu_stu_qqq.sas7bdat", col_select = c("CNTSTUID","ST004D01T", "W_FSTUWT")) #includes student ID, gender, and weights
+data <- merge(math_items,items, by="CNTSTUID")
+data <- subset(data, CNTRYID == 840)
+data <- select(data, -c(CNTSTUID,CNTRYID))
+
+result <- data %>%    #identify all respondents with no answers
+    mutate(non_na_count = rowSums(!is.na(across(-c(1:2))))) %>%
+    filter(non_na_count < 1)
+
+data_clean <- anti_join(data, result)
+
+f <- subset(data_clean, ST004D01T == 1)
+m <- subset(data_clean, ST004D01T == 2)
+
+items <- rbind(f,m)
+items <- select(items, -c(ST004D01T,W_FSTUWT))
+
+#Identify parameters for multipleGroup model
+
+weights <- data_clean$W_FSTUWT/(sum(data_clean$W_FSTUWT)/nrow(data_clean))  #normalize the weights
+group <- c(rep('f', nrow(f)), rep('m', nrow(m)))
+anchors <- colnames(items)[c(1,2,3,4,5)]  #replace numbers with selected anchors
+
+#Create model
+model <- multipleGroup(items, 1, group = group, SE = TRUE, survey.weights = weights, invariance = c(anchors, 'free_means', 'free_var'))
+
+Wald <- DIF(model, c('a1', 'd'), Wald = TRUE)
+
+W <- Wald[-order(Wald$W),]
+p <- Wald[-order(Wald$p),]
+
+#Identify new anchors based on the highest p-value items
+anchors2 <- c([anchors here])
+
+model2 <- multipleGroup(items, 1, group = group, SE = TRUE, survey.weights = weights, invariance = c(anchors2, 'free_means', 'free_var'))
+
+Wald2 <- DIF(model2, c('a1', 'd'), Wald = TRUE)
+
+#Repeat process from lines 36-44 a total of four times to identify the initial anchors
