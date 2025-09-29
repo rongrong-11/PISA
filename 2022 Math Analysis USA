@@ -5,16 +5,12 @@ library(mirt)
 #load in information, select US entries and split between male and female
 
 math_items <- read_sas("cy08msp_stu_cog.sas7bdat", col_select = c("CNTSTUID", "CNTRYID", [math items] ))
-student_info <- read_sas("cy07_msu_stu_qqq.sas7bdat", col_select = c("CNTSTUID","ST004D01T", "W_FSTUWT")) #includes student ID, gender, and weights
+student_info <- read_sas("cy08msp_stu_qqq.sas7bdat", col_select = c("CNTSTUID","ST004D01T", "W_FSTUWT")) #includes student ID, gender, and weights
 data <- merge(math_items,items, by="CNTSTUID")
 data <- subset(data, CNTRYID == 840)
 data <- select(data, -c(CNTSTUID,CNTRYID))
 
 data_clean <- data[rowSums(is.na(data[, -(1:2)])) != ncol(data[, -(1:2)]), ]  #remove rows with all NAs (excluding values in the first 2 columns)
-
-# result <- fuller_rows %>%
-    mutate(non_na_count = rowSums(!is.na(across(-c(1:2))))) %>%
-    filter(non_na_count < 5)
 
 f <- subset(data_clean, ST004D01T == 1)
 m <- subset(data_clean, ST004D01T == 2)
@@ -25,7 +21,7 @@ colnames(items) <- c(1:57)
 
 #Identify parameters for unweighted multipleGroup model
 group <- c(rep('f', nrow(f)), rep('m', nrow(m)))
-anchors <- colnames(items)[c(1,2,3,4,5)]  #replace numbers with anchors identified in "Initial Anchor Identification"
+anchors <- colnames(items)[c(18, 10, 42, 6, 37)]  #replace numbers with anchors identified in "Initial Anchor Identification"
 
 #Create model
 model <- multipleGroup(items, 1, group = group, SE = TRUE, invariance = c(anchors, 'free_means', 'free_var'))
@@ -37,12 +33,12 @@ LRT <- DIF(model, c('a1','d'))
 #Wald <- DIF(model, c('a1','d'), Wald=TRUE)
 #LRT <- DIF(model, c('a1','d'), items2test = c([items flagged by Wald]))
 
-anchors2 <- c([items from LRT with highest p-value])
+anchors2 <- c(19, 40, 33, 49, 7)    #items with highest p-value from LRT
 model2 <- multipleGroup(items, 1, group = group, SE = TRUE, invariance = c(anchors2, 'free_means', 'free_var'))
 LRT2 <- DIF(model2, c('a1','d'))
 
-anchors3 <- c([items from LRT2 with highest p-value])
+anchors3 <- c(10, 15, 42, 47, 16)
 model3 <- multipleGroup(items, 1, group = group, SE = TRUE, invariance = c(anchors3, 'free_means', 'free_var'))
 LRT3 <- DIF(model3, c('a1','d'))
 
-p <- LRT3[LRT3$p < (0.05/57),]    #identify items over threshold for DIF
+low_p <- LRT3[LRT3$p < (0.05/57),]    #identify items over threshold for DIF
