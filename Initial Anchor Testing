@@ -1,0 +1,35 @@
+library(haven)
+library(dplyr)
+library(mirt)
+
+#load in information, select US entries and split between male and female
+
+math_items <- read_sas("cy07_msu_stu_cog.sas7bdat", col_select = c("CNTSTUID", "CNTRYID", [math items] ))
+student_info <- read_sas("cy07_msu_stu_qqq.sas7bdat", col_select = c("CNTSTUID","ST004D01T","W_FSTUWT")) #includes student ID, gender, and weights
+data <- merge(math_items,items, by="CNTSTUID")
+data <- subset(data, CNTRYID == 840)    #840 is the PISA ID for the United States
+data <- select(data, -c(CNTSTUID,CNTRYID))
+
+result <- data %>%    #identify all respondents with no answers
+    mutate(non_na_count = rowSums(!is.na(across(-c(1:2))))) %>%
+    filter(non_na_count < 1)
+
+data_clean <- anti_join(data, result)
+
+f <- subset(data_clean, ST004D01T == 1)
+m <- subset(data_clean, ST004D01T == 2)
+
+weights_f <- 
+
+f_items <- select(f, -c(ST004D01T, W_FSTUWT))
+m_items <- select(m, -c(ST004D01T, W_FSTUWT))
+
+model_f <- mirt(
+data = f_items,
+model = 1,
+itemtype = "3PL",
+Survey.weightS = weights_f,
+verboSe = TRUE
+)
+params_f <- coef(model_f, IRTpars = TRUE, simplify = TRUE)
+
