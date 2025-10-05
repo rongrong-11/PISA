@@ -7,7 +7,7 @@ library(mirt)
 math_items <- read_sas("cy07_msu_stu_cog.sas7bdat", col_select = c("CNTSTUID", "CNTRYID", [math items] ))
 student_info <- read_sas("cy07_msu_stu_qqq.sas7bdat", col_select = c("CNTSTUID","ST004D01T", "W_FSTUWT")) #includes student ID, gender, and weights
 data <- merge(math_items,items, by="CNTSTUID")
-data <- subset(data, CNTRYID == 840)
+data <- subset(data, CNTRYID == 840)    #840 is the PISA ID for the United States
 data <- select(data, -c(CNTSTUID,CNTRYID))
 
 result <- data %>%    #identify all respondents with no answers
