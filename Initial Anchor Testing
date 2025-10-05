@@ -19,17 +19,40 @@ data_clean <- anti_join(data, result)
 f <- subset(data_clean, ST004D01T == 1)
 m <- subset(data_clean, ST004D01T == 2)
 
-weights_f <- 
+weights_f <- f$W_FSTUWT/(sum(f$W_FSTUWT)/nrow(f))    #Normalize the weights
+weights_m <- m$W_FSTUWT/(sum(m$W_FSTUWT)/nrow(m))
 
 f_items <- select(f, -c(ST004D01T, W_FSTUWT))
 m_items <- select(m, -c(ST004D01T, W_FSTUWT))
 
-model_f <- mirt(
+colnames(f_items) <- c(1:51)
+colnames(m_items) <- c(1:51)
+
+model_f <- mirt(    #Create separate models for male and females
 data = f_items,
 model = 1,
-itemtype = "3PL",
-Survey.weightS = weights_f,
-verboSe = TRUE
+itemtype = "2PL",
+survey.weights = weights_f,
+verbose = TRUE
 )
-params_f <- coef(model_f, IRTpars = TRUE, simplify = TRUE)
 
+model_m <- mirt(
+data = m_items,
+model = 1,
+itemtype = "2PL",
+survey.weights = weights_m,
+verbose = TRUE
+)
+
+#Compare the differences in parameters
+params_f <- coef(model_f, IRTpars = TRUE, simplify = TRUE)
+params_m <- coef(model_m, IRTpars = TRUE, simplify = TRUE)
+
+a_f <-params_f$items[,1]
+b_f <-params_f$items[,2]
+
+a_m <-params_m$items[,1]
+b_m <-params_m$items[,2]
+
+difference <- data.frame(abs(a_f-a_m) + abs(b_f-b_m))
+#The 5 items with the overall most similar parameters (the smallest values in the data frame) can be used as a starting set to find more reliable anchor items
